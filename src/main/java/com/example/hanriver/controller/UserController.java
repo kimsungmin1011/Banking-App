@@ -10,7 +10,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import com.example.hanriver.dto.UsernameUpdateDTO; // UsernameUpdateDTO 임포트
-
 import java.util.Optional;
 
 @RestController
@@ -61,12 +60,14 @@ public class UserController {
     public ResponseEntity<String> login(@RequestBody LoginRequest loginRequest) {
         if (userService.verifyLogin(loginRequest.getUsername(), loginRequest.getPassword())) {
             User user = userService.findByUsername(loginRequest.getUsername()).get();
-            String token = jwtService.createToken(user.getId(), user.getUsername());
+            // JWT 토큰 생성 시 계좌번호와 잔고 정보를 포함
+            String token = jwtService.createToken(user.getId(), user.getUsername(), user.getAccountNumber(), user.getBalance());
             return ResponseEntity.ok(token);
         } else {
             return ResponseEntity.badRequest().body("Invalid username or password");
         }
     }
+
 
     // 사용자명 변경 메소드 수정
     @PutMapping("/{id}/updateUsername")

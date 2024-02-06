@@ -4,6 +4,7 @@ import com.example.hanriver.dto.PostCreateDTO;
 import com.example.hanriver.model.Post;
 import com.example.hanriver.model.User;
 import com.example.hanriver.repository.PostRepository;
+import com.example.hanriver.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,10 +15,12 @@ import java.util.Optional;
 public class PostService {
 
     private final PostRepository postRepository;
+    private final UserRepository userRepository; // UserRepository 추가
 
     @Autowired
-    public PostService(PostRepository postRepository) {
+    public PostService(PostRepository postRepository, UserRepository userRepository) {
         this.postRepository = postRepository;
+        this.userRepository = userRepository; // UserRepository 의존성 주입
     }
 
     public List<Post> getAllPosts() {
@@ -25,15 +28,15 @@ public class PostService {
     }
 
     public Post createPost(PostCreateDTO postCreateDTO) {
-        // 새로운 User 객체 생성 및 설정
-        User user = new User();
-        user.setId(postCreateDTO.getUserId());
-        user.setUsername(postCreateDTO.getUsername());
+        Optional<User> userOptional = userRepository.findById(postCreateDTO.getUserId());
+        if (!userOptional.isPresent()) {
+            throw new RuntimeException("User not found with id: " + postCreateDTO.getUserId()); // 적절한 예외 처리
+        }
+        User user = userOptional.get();
 
-        // 새로운 Post 객체 생성 및 설정
         Post newPost = new Post();
         newPost.setContent(postCreateDTO.getContent());
-        newPost.setUser(user); // 게시글에 사용자 연결
+        newPost.setUser(user); // 조회된 User 객체를 Post에 연결
 
         return postRepository.save(newPost);
     }
@@ -57,8 +60,6 @@ public class PostService {
         return false;
     }
 
-
-
     public boolean deletePost(Long id, Long userId) {
         Optional<Post> existingPost = postRepository.findById(id);
         if (existingPost.isPresent() && existingPost.get().getUser().getId().equals(userId)) {
@@ -67,7 +68,6 @@ public class PostService {
         }
         return false;
     }
-
 
     // 추가적인 로직 구현
 }

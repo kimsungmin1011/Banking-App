@@ -5,27 +5,32 @@ import com.example.hanriver.dto.CartItemDTO;
 import com.example.hanriver.model.Cart;
 import com.example.hanriver.model.CartItem;
 import com.example.hanriver.model.Product;
+import com.example.hanriver.model.User;
 import com.example.hanriver.repository.CartItemRepository;
 import com.example.hanriver.repository.CartRepository;
 import com.example.hanriver.repository.ProductRepository;
+import com.example.hanriver.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.math.BigDecimal;
+
 @Service
 public class CartService {
     private final CartRepository cartRepository;
     private final ProductRepository productRepository;
+    private final UserRepository userRepository;
 
     @Autowired
     private CartItemRepository cartItemRepository;
 
     @Autowired
-    public CartService(CartRepository cartRepository, ProductRepository productRepository) {
+    public CartService(CartRepository cartRepository, ProductRepository productRepository, UserRepository userRepository) {
         this.cartRepository = cartRepository;
         this.productRepository = productRepository;
+        this.userRepository = userRepository;
     }
 
     public CartDTO getCartDTOByUserId(Long userId) {
@@ -50,17 +55,30 @@ public class CartService {
     }
 
     public CartItem addProductToCart(Long userId, Long productId, int quantity, BigDecimal amount) {
-        Cart cart = cartRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Cart not found"));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Cart cart = user.getCart(); // Directly obtain Cart from User
+        if (cart == null) {
+            throw new RuntimeException("Cart not found for user: " + userId);
+        }
 
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        // Update user's balance
+        BigDecimal newBalance = user.getBalance().subtract(amount);
+        if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
+            throw new RuntimeException("Insufficient balance");
+        }
+        user.setBalance(newBalance);
+        userRepository.save(user);
 
         CartItem cartItem = new CartItem();
         cartItem.setCart(cart);
         cartItem.setProduct(product);
         cartItem.setQuantity(quantity);
-        cartItem.setAmount(amount); // amount 설정
+        cartItem.setAmount(amount);
 
         return cartItemRepository.save(cartItem);
     }
@@ -74,5 +92,5 @@ public class CartService {
         return cartItemDTO;
     }
 
-    // 추가 기능: 상품 제거, 수량 변경 등을 여기에 구현할 수 있습니다.
+    // Here you can implement additional features like removing products, changing quantities, etc.
 }

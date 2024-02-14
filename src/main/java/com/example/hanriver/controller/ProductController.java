@@ -19,14 +19,17 @@ public class ProductController {
     private ProductService productService;
 
     @PostMapping
-    public ResponseEntity<?> addProduct(@RequestBody ProductCreateDTO createDTO) {
+    public ResponseEntity<Product> addProduct(@RequestBody ProductCreateDTO createDTO) {
         try {
             Product product = productService.addProduct(createDTO);
-            return ResponseEntity.ok(product);
+            // 상품 생성 성공 시, 201 Created 상태 코드와 함께 생성된 상품 정보 반환
+            return new ResponseEntity<>(product, HttpStatus.CREATED);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+            // 예외 처리 시, 403 Forbidden 상태 코드 반환
+            return new ResponseEntity<>(null, HttpStatus.FORBIDDEN);
         }
     }
+
 
 
     @GetMapping

@@ -7,7 +7,7 @@ import com.example.hanriver.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
+import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.Random;
@@ -81,6 +81,27 @@ public class UserService {
                     .toString();
         } while (userRepository.existsByAccountNumber(accountNumber)); // 생성된 계좌 번호가 유니크한지 확인
         return accountNumber;
+    }
+
+    @Transactional
+    public boolean updateBalance(Long userId, BigDecimal amount) {
+        Optional<User> userOptional = userRepository.findById(userId);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            BigDecimal newBalance = user.getBalance().add(amount);
+
+            // 잔고가 음수가 되는 경우를 방지
+            if (newBalance.compareTo(BigDecimal.ZERO) >= 0) {
+                user.setBalance(newBalance);
+                userRepository.save(user);
+                return true;
+            } else {
+                // 잔고가 부족한 경우
+                return false;
+            }
+        }
+        // 사용자를 찾을 수 없는 경우
+        return false;
     }
 
 }

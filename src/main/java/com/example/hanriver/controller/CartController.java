@@ -26,7 +26,8 @@ public class CartController {
     @PostMapping("/{userId}/add")
     public ResponseEntity<?> addProductToCart(@PathVariable Long userId, @RequestBody CartItemDTO cartItemDTO) {
         try {
-            CartItem cartItem = cartService.addProductToCart(userId, cartItemDTO.getProductId(), cartItemDTO.getQuantity());
+            // 서비스 메서드 호출 시 amount도 전달
+            CartItem cartItem = cartService.addProductToCart(userId, cartItemDTO.getProductId(), cartItemDTO.getQuantity(), cartItemDTO.getAmount());
             return ResponseEntity.ok(cartItem);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());

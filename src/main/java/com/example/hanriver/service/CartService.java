@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
+import java.math.BigDecimal;
 @Service
 public class CartService {
     private final CartRepository cartRepository;
@@ -49,7 +49,7 @@ public class CartService {
         return cart;
     }
 
-    public CartItem addProductToCart(Long userId, Long productId, int quantity) {
+    public CartItem addProductToCart(Long userId, Long productId, int quantity, BigDecimal amount) {
         Cart cart = cartRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Cart not found"));
 
@@ -60,6 +60,7 @@ public class CartService {
         cartItem.setCart(cart);
         cartItem.setProduct(product);
         cartItem.setQuantity(quantity);
+        cartItem.setAmount(amount); // amount 설정
 
         return cartItemRepository.save(cartItem);
     }
@@ -69,6 +70,7 @@ public class CartService {
         cartItemDTO.setId(cartItem.getId());
         cartItemDTO.setProductId(cartItem.getProduct().getId());
         cartItemDTO.setQuantity(cartItem.getQuantity());
+        cartItemDTO.setAmount(cartItem.getAmount());
         return cartItemDTO;
     }
 

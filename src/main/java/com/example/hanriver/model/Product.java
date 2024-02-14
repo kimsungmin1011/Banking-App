@@ -12,7 +12,13 @@ public class Product {
     private Long id;
     private String name;
     private String description;
-    private double price;
 
-    // Constructors, Getters, and Setters
+    public enum AccountType {
+        DEPOSIT, SAVINGS, CHECKING, HOUSING_SUBSCRIPTION
+    }
+
+    @Enumerated(EnumType.STRING)
+    private AccountType accountType;
+
+    // Getters and Setters
 }
